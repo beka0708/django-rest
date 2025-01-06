@@ -1,4 +1,6 @@
 from django.db import models
+from user.models import CustomUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Genre(models.Model):
@@ -29,8 +31,11 @@ class Movie(models.Model):
 
 
 class Rating(models.Model):
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    rating = models.FloatField(null=True)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="ratings")
+    rating = models.FloatField(null=True, validators=[
+        MinValueValidator(1.0, message="Рейтинг не может быть меньше 1"),
+        MaxValueValidator(10.0, message="Рейтинг не может быть больше 10")
+    ])
     review = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -54,5 +59,14 @@ class Author(models.Model):
         verbose_name_plural = "Авторы"
 
 
+class Favorite(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.user.username} добавил в избранное кино: {self.movie.title}"
+
+    class Meta:
+        verbose_name = "Избранное"
+        verbose_name_plural = "Избранное"
 

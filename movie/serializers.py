@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Genre, Movie, Rating, Author
+from .models import Genre, Movie, Rating, Author, Favorite
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -16,15 +16,21 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 class MovieSerializer(serializers.ModelSerializer):
     authors = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Movie
-        fields = ["id", "title", "description", "image", "authors"]
+        fields = ["id", "title", "description", "image", "authors", "average_rating"]
 
     def get_authors(self, obj):
         authors = obj.author.all()
-        print(authors)
         return AuthorSerializer(authors, many=True).data
+
+    def get_average_rating(self, obj):
+        ratings = obj.ratings.all()
+        if ratings.exists():
+            return round(sum(i.rating for i in ratings) / ratings.count(), 2)
+        return None
 
 
 class MovieDetailSerializer(serializers.ModelSerializer):
@@ -42,5 +48,10 @@ class RatingSerializer(serializers.ModelSerializer):
         model = Rating
         fields = ["id", "movie", "rating", "review"]
 
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = "__all__"
 
 
